@@ -46,53 +46,53 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-async function ensureDenoJson(directory: string): Promise<void> {
-  const filePath = join(directory, "./deno.json");
+// async function ensureDenoJson(directory: string): Promise<void> {
+//   const filePath = join(directory, "./deno.json");
 
-  if (!(await exists(filePath))) {
-    await Deno.writeTextFileSync(
-      filePath,
-      JSON.stringify(defaultDenoJson(), null, 2),
-    );
-  }
-}
+//   if (!(await exists(filePath))) {
+//     await Deno.writeTextFileSync(
+//       filePath,
+//       JSON.stringify(defaultDenoJson(), null, 2),
+//     );
+//   }
+// }
 
-function defaultDenoJson() {
-  return {
-    "tasks": {
-      "build": "deno task build:fmt && deno task build:lint && deno task test",
-      "build:fmt": "deno fmt",
-      "build:lint": "deno lint",
-      "deploy": "deno task build && ftm git",
-      "npm:build": "deno run -A scripts/npm.build.ts",
-      "npm:publish": "npm publish ./build --access public",
-      "test": "deno test -A ./tests/tests.ts --coverage=cov",
-    },
-    "imports": {
-      "$dnt": "https://deno.land/x/dnt/mod.ts",
-      "$std/": "https://deno.land/std@0.195.0/",
-    },
-    "compilerOptions": {
-      "jsx": "react-jsx",
-      "jsxImportSource": "preact",
-    },
-    "lock": false,
-    "fmt": {
-      "files": {
-        "include": [],
-        "exclude": [],
-      },
-      "options": {},
-    },
-    "lint": {
-      "files": {
-        "include": [],
-        "exclude": [],
-      },
-      "rules": {
-        "include": [],
-        "exclude": [],
-      },
-    },
-  };
-}
+// function defaultDenoJson() {
+//   return {
+//     "tasks": {
+//       "build": "deno task build:fmt && deno task build:lint && deno task test",
+//       "build:fmt": "deno fmt",
+//       "build:lint": "deno lint",
+//       "deploy": "deno task build && ftm git",
+//       "npm:build": "deno run -A scripts/npm.build.ts",
+//       "npm:publish": "npm publish ./build --access public",
+//       "test": "deno test -A ./tests/tests.ts --coverage=cov",
+//     },
+//     "imports": {
+//       "$dnt": "https://deno.land/x/dnt/mod.ts",
+//       "$std/": "https://deno.land/std@0.195.0/",
+//     },
+//     "compilerOptions": {
+//       "jsx": "react-jsx",
+//       "jsxImportSource": "preact",
+//     },
+//     "lock": false,
+//     "fmt": {
+//       "files": {
+//         "include": [],
+//         "exclude": [],
+//       },
+//       "options": {},
+//     },
+//     "lint": {
+//       "files": {
+//         "include": [],
+//         "exclude": [],
+//       },
+//       "rules": {
+//         "include": [],
+//         "exclude": [],
+//       },
+//     },
+//   };
+// }
