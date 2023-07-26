@@ -12,23 +12,37 @@ await new Command()
 
     let { directory } = options;
 
-    if (!directory) {
-      directory = Deno.execPath();
+    if (directory) {
+        await Deno.mkdir(directory!, { recursive: true });
     }
 
+    if (!directory) {
+      directory = Deno.execPath();
+    } else if (directory.startsWith(".")) {
+        directory = await Deno.realPath(directory);
+    }
+
+    console.log(directory);
+
     const freshInit = await new Deno.Command("deno", {
-        args: ["run", "-A", "-r", "https://fresh.deno.dev"]
+        args: ["run", "-A", "-r", "https://fresh.deno.dev", ".", "--twind", "--vscode"],
+        cwd: directory,
     });
     
-    await freshInit.output();
+    const output = await freshInit.output();
+
+    console.log(output);
+    console.log(new TextDecoder().decode(output.stdout));
+    console.log(new TextDecoder().decode(output.stderr));
     
-    await Deno.mkdir(directory, { recursive: true });
-    await Deno.mkdir(join(directory, ".vscode"), { recursive: true });
     await Deno.mkdir(join(directory, "scripts"), { recursive: true });
-    await Deno.mkdir(join(directory, "src"), { recursive: true });
     await Deno.mkdir(join(directory, "tests"), { recursive: true });
 
-    // await ensureDenoJson(directory);
+    await ensureDockerfile(directory, name);
+    
+    await ensureNPMBuild(directory, name);
+    
+    await ensureVSCodeLaunch(directory);
   })
   .parse(Deno.args);
 
@@ -46,53 +60,101 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-// async function ensureDenoJson(directory: string): Promise<void> {
-//   const filePath = join(directory, "./deno.json");
+async function ensureDockerfile(directory: string, name: string): Promise<void> {
+    const filePath = join(directory, "./Dockerfile");
 
-//   if (!(await exists(filePath))) {
-//     await Deno.writeTextFileSync(
-//       filePath,
-//       JSON.stringify(defaultDenoJson(), null, 2),
-//     );
-//   }
-// }
+    if (!(await exists(filePath))) {
+        await Deno.writeTextFileSync(
+            filePath,
+            defaultDockerfile(name),
+        );
+    }
+}
 
-// function defaultDenoJson() {
-//   return {
-//     "tasks": {
-//       "build": "deno task build:fmt && deno task build:lint && deno task test",
-//       "build:fmt": "deno fmt",
-//       "build:lint": "deno lint",
-//       "deploy": "deno task build && ftm git",
-//       "npm:build": "deno run -A scripts/npm.build.ts",
-//       "npm:publish": "npm publish ./build --access public",
-//       "test": "deno test -A ./tests/tests.ts --coverage=cov",
-//     },
-//     "imports": {
-//       "$dnt": "https://deno.land/x/dnt/mod.ts",
-//       "$std/": "https://deno.land/std@0.195.0/",
-//     },
-//     "compilerOptions": {
-//       "jsx": "react-jsx",
-//       "jsxImportSource": "preact",
-//     },
-//     "lock": false,
-//     "fmt": {
-//       "files": {
-//         "include": [],
-//         "exclude": [],
-//       },
-//       "options": {},
-//     },
-//     "lint": {
-//       "files": {
-//         "include": [],
-//         "exclude": [],
-//       },
-//       "rules": {
-//         "include": [],
-//         "exclude": [],
-//       },
-//     },
-//   };
-// }
+function defaultDockerfile(name: string) {
+return `FROM denoland/deno:1.33.2
+
+ARG VERSION
+ENV DENO_DEPLOYMENT_ID=${"${VERSION}"}
+
+WORKDIR /app
+
+COPY . .
+RUN deno cache main.ts
+
+EXPOSE 8000
+
+CMD ["run", "-A", "main.ts"]`;
+}
+  
+async function ensureNPMBuild(directory: string, name: string): Promise<void> {
+    const filePath = join(directory, "./scripts/npm.build.ts");
+
+    if (!(await exists(filePath))) {
+        await Deno.writeTextFileSync(
+            filePath,
+            defaultNPMBuild(name),
+        );
+    }
+}
+
+function defaultNPMBuild(name: string) {
+return `import { build, emptyDir } from "$dnt";
+
+await emptyDir("./build");
+
+await build({
+entryPoints: ["mod.ts"],
+outDir: "./build",
+shims: {
+    deno: true,
+},
+package: {
+    name: "${name}",
+    version: Deno.args[0],
+    description: "ES6 based module project.",
+    license: "MIT"
+},
+postBuild() {
+    Deno.copyFileSync("LICENSE", "build/LICENSE");
+    Deno.copyFileSync("README.md", "build/README.md");
+},
+});
+`;
+}
+  
+async function ensureVSCodeLaunch(directory: string): Promise<void> {
+    const filePath = join(directory, "./.vscode/launch.json");
+
+    if (!(await exists(filePath))) {
+        await Deno.writeTextFileSync(
+            filePath,
+            JSON.stringify(defaultVSCodeLaunch(), null, 2),
+        );
+    }
+}
+
+function defaultVSCodeLaunch() {
+    return {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "request": "launch",
+                "name": "Launch Program",
+                "type": "node",
+                "program": "${workspaceFolder}/tests/tests.ts",
+                "cwd": "${workspaceFolder}",
+                "runtimeExecutable": "C:\\ProgramData\\chocolatey\\lib\\deno\\deno.EXE",
+                "runtimeArgs": [
+                    "test",
+                    "--config",
+                    "./deno.json",
+                    "--inspect-wait",
+                    "--allow-all",
+                ],
+                "attachSimplePort": 9229,
+            },
+        ],
+    };
+}
+  
