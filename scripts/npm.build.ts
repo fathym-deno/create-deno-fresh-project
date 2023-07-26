@@ -12,7 +12,7 @@ await build({
     name: "@fathym/create-deno-fresh-project",
     version: Deno.args[0],
     description: "ES6 based module project.",
-    license: "MIT"
+    license: "MIT",
   },
   postBuild() {
     Deno.copyFileSync("LICENSE", "build/LICENSE");

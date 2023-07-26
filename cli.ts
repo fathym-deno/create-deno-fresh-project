@@ -13,35 +13,43 @@ await new Command()
     let { directory } = options;
 
     if (directory) {
-        await Deno.mkdir(directory!, { recursive: true });
+      await Deno.mkdir(directory!, { recursive: true });
     }
 
     if (!directory) {
       directory = Deno.execPath();
     } else if (directory.startsWith(".")) {
-        directory = await Deno.realPath(directory);
+      directory = await Deno.realPath(directory);
     }
 
     console.log(directory);
 
     const freshInit = await new Deno.Command("deno", {
-        args: ["run", "-A", "-r", "https://fresh.deno.dev", ".", "--twind", "--vscode"],
-        cwd: directory,
+      args: [
+        "run",
+        "-A",
+        "-r",
+        "https://fresh.deno.dev",
+        ".",
+        "--twind",
+        "--vscode",
+      ],
+      cwd: directory,
     });
-    
+
     const output = await freshInit.output();
 
     console.log(output);
     console.log(new TextDecoder().decode(output.stdout));
     console.log(new TextDecoder().decode(output.stderr));
-    
+
     await Deno.mkdir(join(directory, "scripts"), { recursive: true });
     await Deno.mkdir(join(directory, "tests"), { recursive: true });
 
-    await ensureDockerfile(directory, name);
-    
+    await ensureDockerfile(directory);
+
     await ensureNPMBuild(directory, name);
-    
+
     await ensureVSCodeLaunch(directory);
   })
   .parse(Deno.args);
@@ -60,19 +68,19 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-async function ensureDockerfile(directory: string, name: string): Promise<void> {
-    const filePath = join(directory, "./Dockerfile");
+async function ensureDockerfile(directory: string): Promise<void> {
+  const filePath = join(directory, "./Dockerfile");
 
-    if (!(await exists(filePath))) {
-        await Deno.writeTextFileSync(
-            filePath,
-            defaultDockerfile(name),
-        );
-    }
+  if (!(await exists(filePath))) {
+    await Deno.writeTextFileSync(
+      filePath,
+      defaultDockerfile(),
+    );
+  }
 }
 
-function defaultDockerfile(name: string) {
-return `FROM denoland/deno:1.33.2
+function defaultDockerfile() {
+  return `FROM denoland/deno:1.33.2
 
 ARG VERSION
 ENV DENO_DEPLOYMENT_ID=${"${VERSION}"}
@@ -86,20 +94,20 @@ EXPOSE 8000
 
 CMD ["run", "-A", "main.ts"]`;
 }
-  
-async function ensureNPMBuild(directory: string, name: string): Promise<void> {
-    const filePath = join(directory, "./scripts/npm.build.ts");
 
-    if (!(await exists(filePath))) {
-        await Deno.writeTextFileSync(
-            filePath,
-            defaultNPMBuild(name),
-        );
-    }
+async function ensureNPMBuild(directory: string, name: string): Promise<void> {
+  const filePath = join(directory, "./scripts/npm.build.ts");
+
+  if (!(await exists(filePath))) {
+    await Deno.writeTextFileSync(
+      filePath,
+      defaultNPMBuild(name),
+    );
+  }
 }
 
 function defaultNPMBuild(name: string) {
-return `import { build, emptyDir } from "$dnt";
+  return `import { build, emptyDir } from "$dnt";
 
 await emptyDir("./build");
 
@@ -122,39 +130,38 @@ postBuild() {
 });
 `;
 }
-  
-async function ensureVSCodeLaunch(directory: string): Promise<void> {
-    const filePath = join(directory, "./.vscode/launch.json");
 
-    if (!(await exists(filePath))) {
-        await Deno.writeTextFileSync(
-            filePath,
-            JSON.stringify(defaultVSCodeLaunch(), null, 2),
-        );
-    }
+async function ensureVSCodeLaunch(directory: string): Promise<void> {
+  const filePath = join(directory, "./.vscode/launch.json");
+
+  if (!(await exists(filePath))) {
+    await Deno.writeTextFileSync(
+      filePath,
+      JSON.stringify(defaultVSCodeLaunch(), null, 2),
+    );
+  }
 }
 
 function defaultVSCodeLaunch() {
-    return {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "request": "launch",
-                "name": "Launch Program",
-                "type": "node",
-                "program": "${workspaceFolder}/tests/tests.ts",
-                "cwd": "${workspaceFolder}",
-                "runtimeExecutable": "C:\\ProgramData\\chocolatey\\lib\\deno\\deno.EXE",
-                "runtimeArgs": [
-                    "test",
-                    "--config",
-                    "./deno.json",
-                    "--inspect-wait",
-                    "--allow-all",
-                ],
-                "attachSimplePort": 9229,
-            },
+  return {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "request": "launch",
+        "name": "Launch Program",
+        "type": "node",
+        "program": "${workspaceFolder}/tests/tests.ts",
+        "cwd": "${workspaceFolder}",
+        "runtimeExecutable": "C:\\ProgramData\\chocolatey\\lib\\deno\\deno.EXE",
+        "runtimeArgs": [
+          "test",
+          "--config",
+          "./deno.json",
+          "--inspect-wait",
+          "--allow-all",
         ],
-    };
+        "attachSimplePort": 9229,
+      },
+    ],
+  };
 }
-  
