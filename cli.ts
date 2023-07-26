@@ -1,5 +1,6 @@
 import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.2/command/mod.ts";
 import { join } from "https://deno.land/std@0.195.0/path/mod.ts";
+import { exists } from "https://deno.land/fathym_common@0.0.34/path/mod.ts";
 
 await new Command()
   .name("create-deno-module-project")
@@ -53,20 +54,6 @@ await new Command()
     await ensureVSCodeLaunch(directory);
   })
   .parse(Deno.args);
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await Deno.stat(path);
-
-    return true;
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      return false;
-    } else {
-      throw error;
-    }
-  }
-}
 
 async function ensureDockerfile(directory: string): Promise<void> {
   const filePath = join(directory, "./Dockerfile");
