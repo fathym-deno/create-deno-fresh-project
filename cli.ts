@@ -139,7 +139,7 @@ async function ensureTwindV1(directory: string): Promise<void> {
   denoCfg.imports["twind-preset-tailwind"] =
     "https://esm.sh/@twind/preset-tailwind@1.1.4";
   denoCfg.imports["$fresh/plugins/twind.ts"] =
-    "https://deno.land/x/fresh_twindv1_plugin@v1.3.0/";
+    "https://deno.land/x/fresh_twindv1_plugin@v1.3.0/twind.ts";
 
   await Deno.writeTextFile(denoCfgPath, JSON.stringify(denoCfg, null, 2));
 }
