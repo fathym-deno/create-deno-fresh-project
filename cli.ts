@@ -51,6 +51,8 @@ await new Command()
 
     await ensureNPMBuild(directory, name);
 
+    await ensureTwindV1(directory);
+
     await ensureVSCodeLaunch(directory);
   })
   .parse(Deno.args);
@@ -115,6 +117,44 @@ postBuild() {
     Deno.copyFileSync("README.md", "build/README.md");
 },
 });
+`;
+}
+
+async function ensureTwindV1(directory: string, name: string): Promise<void> {
+  const filePath = join(directory, "./twind.config.ts");
+
+  await Deno.writeTextFileSync(
+    filePath,
+    defaultTwindV1(),
+  );
+
+  const denoCfgPath = join(directory, "./twind.config.ts");
+
+  const denoCfg = JSON.parse(await Deno.readTextFile(denoCfgPath));
+
+  denoCfg.imports["twind"] = "https://esm.sh/@twind/core@1.1.3";
+  denoCfg.imports["twind/"] = "https://esm.sh/@twind/core@1.1.3/";
+  denoCfg.imports["twind-preset-autoprefix"] =
+    "https://esm.sh/@twind/preset-autoprefix@1.0.7";
+  denoCfg.imports["twind-preset-tailwind"] =
+    "https://esm.sh/@twind/preset-tailwind@1.1.4";
+  denoCfg.imports["twind_fresh_plugin"] =
+    "https://deno.land/x/fresh_twindv1_plugin@v1.3.0/";
+}
+
+function defaultTwindV1() {
+  return `import { Options } from "$fresh/plugins/twind.ts";
+import { defineConfig } from "twind";
+// twind preset
+import presetAutoPrefix from "twind-preset-autoprefix";
+import presetTailWind from "twind-preset-tailwind";
+
+export default {
+  ...defineConfig({
+    presets: [presetAutoPrefix(), presetTailWind()],
+  }),
+  selfURL: import.meta.url,
+} as Options;
 `;
 }
 
