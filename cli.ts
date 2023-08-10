@@ -120,7 +120,7 @@ postBuild() {
 `;
 }
 
-async function ensureTwindV1(directory: string, name: string): Promise<void> {
+async function ensureTwindV1(directory: string): Promise<void> {
   const filePath = join(directory, "./twind.config.ts");
 
   await Deno.writeTextFileSync(
