@@ -128,7 +128,7 @@ async function ensureTwindV1(directory: string): Promise<void> {
     defaultTwindV1(),
   );
 
-  const denoCfgPath = join(directory, "./twind.config.ts");
+  const denoCfgPath = join(directory, "./deno.json");
 
   const denoCfg = JSON.parse(await Deno.readTextFile(denoCfgPath));
 
@@ -140,6 +140,8 @@ async function ensureTwindV1(directory: string): Promise<void> {
     "https://esm.sh/@twind/preset-tailwind@1.1.4";
   denoCfg.imports["twind_fresh_plugin"] =
     "https://deno.land/x/fresh_twindv1_plugin@v1.3.0/";
+
+  await Deno.writeTextFile(denoCfgPath, JSON.stringify(denoCfg, null, 2));
 }
 
 function defaultTwindV1() {
