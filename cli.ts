@@ -138,7 +138,7 @@ async function ensureTwindV1(directory: string): Promise<void> {
     "https://esm.sh/@twind/preset-autoprefix@1.0.7";
   denoCfg.imports["twind-preset-tailwind"] =
     "https://esm.sh/@twind/preset-tailwind@1.1.4";
-  denoCfg.imports["twind_fresh_plugin"] =
+  denoCfg.imports["$fresh/plugins/twind.ts"] =
     "https://deno.land/x/fresh_twindv1_plugin@v1.3.0/";
 
   await Deno.writeTextFile(denoCfgPath, JSON.stringify(denoCfg, null, 2));
